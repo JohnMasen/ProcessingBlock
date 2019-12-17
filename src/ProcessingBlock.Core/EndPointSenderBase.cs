@@ -54,6 +54,15 @@ namespace ProcessingBlock.Core
         }
 
         protected abstract Task onSendAsync(T value, CancellationToken token);
-        
+
+        public virtual Task Init()
+        {
+            return Task.CompletedTask;
+        }
+
+        public virtual Task Close()
+        {
+            return Task.CompletedTask;
+        }
     }
 }

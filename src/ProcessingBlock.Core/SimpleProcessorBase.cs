@@ -8,10 +8,7 @@ namespace ProcessingBlock.Core
 {
     public abstract class SimpleProcessorBase<TPara, TResult> : ProcessorBase<TPara, TResult>
     {
-        public SimpleProcessorBase(IEndPointReceiver<TPara> receiver, IEndPointSender<TResult> sender):base(receiver, sender)
-        {
-
-        }
+        
         public SimpleProcessorBase()
         {
 

@@ -11,9 +11,9 @@ namespace ConsoleTest
         static void Main(string[] args)
         {
             TestProcessor<int> processor = new TestProcessor<int>(doAdd);
-            processor.NextEndPoint = new TestSender<int>();
+            processor.Sender = new TestSender<int>();
             TestReceiver<int> receiver = new TestReceiver<int>();
-            processor.CurrentEndPoint = receiver;
+            processor.Receiver = receiver;
             processor.Start();
            
 

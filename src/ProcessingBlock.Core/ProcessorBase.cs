@@ -11,47 +11,46 @@ namespace ProcessingBlock.Core
         private CancellationTokenSource cts = new CancellationTokenSource();
 
         #region Public properties
-        private IEndPointSender<TResult> _next;
+        private IEndPointSender<TResult> _sender;
 
-        public IEndPointSender<TResult> NextEndPoint
+        public IEndPointSender<TResult> Sender 
         {
-            get { return _next; }
+            get { return _sender; }
             set
             {
                 if (Status == StatusEnum.Busy)
                 {
                     throw new InvalidOperationException("Cannot change NextEndPoint while processor is busy.");
                 }
-                _next = value;
+                _sender = value;
             }
         }
 
-        private IEndPointReceiver<TPara> endPointReceiver;
+        private IEndPointReceiver<TPara> _receiver;
 
-        public IEndPointReceiver<TPara> CurrentEndPoint
+        public IEndPointReceiver<TPara> Receiver
         {
-            get { return endPointReceiver; }
+            get { return _receiver; }
             set
             {
                 if (Status == StatusEnum.Busy)
                 {
                     throw new InvalidOperationException("Cannot change CurrentEndPoint while processor is busy");
                 }
-                endPointReceiver = value;
+                _receiver = value;
             }
         }
         public WaitHandle BusyWaitHandle { get; } = new ManualResetEvent(false);
 
         public StatusEnum Status { get; private set; }
+
+        public Guid ID { get; } = Guid.NewGuid();
+
+        public string Name { get; set; }
         #endregion
 
 
-        public ProcessorBase(IEndPointReceiver<TPara> receiver, IEndPointSender<TResult> sender)
-        {
-            Status = StatusEnum.Idle;
-            NextEndPoint = sender;
-            CurrentEndPoint = receiver;
-        }
+
         public ProcessorBase()
         {
             Status = StatusEnum.Idle;
@@ -59,15 +58,43 @@ namespace ProcessingBlock.Core
 
         public void Start()
         {
+            if (Status==StatusEnum.Busy)
+            {
+                return;
+            }
+            if (Receiver == null)
+            {
+                throw new InvalidOperationException("Receiver cannot be null");
+            }
+            try
+            {
+                Receiver.Init();
+            }
+            catch (Exception ex)
+            {
+                throw new InvalidOperationException("Failed to init Receiver", ex);
+            }
+            if (Sender==null)
+            {
+                throw new InvalidOperationException("Sender cannot be null");
+            }
+            try
+            {
+                Sender.Init();
+            }
+            catch (Exception ex)
+            {
+                throw new InvalidOperationException("Failed to init Sender",ex);
+            }
             Status = StatusEnum.Busy;
             (BusyWaitHandle as ManualResetEvent).Reset();
             Task.Factory.StartNew(async () =>
             {
                 try
                 {
-                    await foreach (var item in CurrentEndPoint.GetResultsAsync(cts.Token))
+                    await foreach (var item in Receiver.GetResultsAsync(cts.Token))
                     {
-                        await Process(item, NextEndPoint, cts.Token);
+                        await Process(item, Sender, cts.Token);
                     }
                 }
                 catch (OperationCanceledException)
@@ -79,6 +106,7 @@ namespace ProcessingBlock.Core
                 }
                 finally
                 {
+                    await Sender.Close();
                     Status = StatusEnum.Idle;
                     (BusyWaitHandle as ManualResetEvent).Set();
                 }
@@ -92,11 +120,20 @@ namespace ProcessingBlock.Core
 
         public void Stop()
         {
+            if (Status==StatusEnum.Idle)
+            {
+                return;
+            }
             cts.Cancel();
-            //BusyWaitHandle.WaitOne();
-            //CurrentEndPoint.BusyWaitHandle.WaitOne();
-            //NextEndPoint.BusyWaitHandle.WaitOne();
-            WaitHandle.WaitAll(new WaitHandle[] { BusyWaitHandle, CurrentEndPoint.BusyWaitHandle, NextEndPoint.BusyWaitHandle });
+            WaitUnitlShutdown();
+        }
+
+        public void WaitUnitlShutdown()
+        {
+            BusyWaitHandle.WaitOne();
+            Receiver.BusyWaitHandle.WaitOne();
+            Sender.BusyWaitHandle.WaitOne();
+            //WaitHandle.WaitAll(new WaitHandle[] { BusyWaitHandle, Receiver.BusyWaitHandle, Sender.BusyWaitHandle });
         }
     }
 }

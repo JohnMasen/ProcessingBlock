@@ -15,6 +15,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\ProcessingBlock.Core\ProcessingBlock.Core.csproj" />
+    <ProjectReference Include="..\ProcessingBlock.Runtime\ProcessingBlock.Runtime.csproj" />
   </ItemGroup>
 
 </Project>

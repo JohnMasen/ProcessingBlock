@@ -4,10 +4,8 @@ using System.Text;
 
 namespace ProcessingBlock.Core
 {
-    public interface IProcessor<TPara,TResult>
+    public interface IProcessor<TPara,TResult>:IIDNameObject,IEndPointReceiverHost<TPara>,IEndPointSenderHost<TResult>
     {
-        public IEndPointSender<TResult> NextEndPoint { get; set; }
-        public IEndPointReceiver<TPara> CurrentEndPoint { get; set; }
 
         void Start();
         void Stop();

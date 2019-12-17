@@ -7,6 +7,8 @@ namespace ProcessingBlock.Core
     public interface IEndPointSender<T>:IStatus
     {
         Task SendAsync(T value, CancellationToken token);
-        
+        Task Init();
+
+        Task Close();
     }
 }
