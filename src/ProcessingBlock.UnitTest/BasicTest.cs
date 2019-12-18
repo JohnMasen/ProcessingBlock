@@ -40,65 +40,79 @@ namespace ProcessingBlock.UnitTest
             //WaitHandle.WaitAll(new WaitHandle[] { processor.BusyWaitHandle, sender.BusyWaitHandle, receiver.BusyWaitHandle },1000);
             Assert.IsTrue(collector.CollectUntilClose().SequenceEqual(targetvalues));
         }
-        [TestMethod]
-        public void SingleChainCall()
-        {
-            FunctionProcessor<int, int> p1 = new FunctionProcessor<int, int>(doAdd);
-            TestReceiver<int> receiver = new TestReceiver<int>();
-            p1.Receiver = receiver;
+        //[TestMethod]
+        //public void SingleChainCall()
+        //{
+        //    FunctionProcessor<int, int> p1 = new FunctionProcessor<int, int>(doAdd);
+        //    TestReceiver<int> receiver = new TestReceiver<int>();
+        //    p1.Receiver = receiver;
 
-            CallCountProcessor<int> p2 = new CallCountProcessor<int>();
-            p2.Sender = new NullEndPointSender<int>();
-            ProcessorManager.Default.Chain(p1, p2);
-            int[] values;
-            values = new int[10];
-            for (int i = 0; i < 10; i++)
-            {
-                receiver.Add(i);
-            }
+        //    CallCountProcessor<int> p2 = new CallCountProcessor<int>();
+        //    p2.Sender = new NullEndPointSender<int>();
+        //    ProcessorManager.Default.Chain(p1, p2);
+        //    int[] values;
+        //    values = new int[10];
+        //    for (int i = 0; i < 10; i++)
+        //    {
+        //        receiver.Add(i);
+        //    }
             
-            p1.Start();
-            p2.Start();
-            receiver.Complete();
-            p1.WaitUnitlShutdown();
-            p2.WaitUnitlShutdown();
-            //WaitHandle.WaitAll(new WaitHandle[] { p1.BusyWaitHandle, p1.Sender.BusyWaitHandle, p1.Receiver.BusyWaitHandle,p2.BusyWaitHandle,p2. }, 1000);
-            Assert.AreEqual(p2.CallCount, 10);
+        //    p1.Start();
+        //    p2.Start();
+        //    receiver.Complete();
+        //    p1.WaitUnitlShutdown();
+        //    p2.WaitUnitlShutdown();
+        //    //WaitHandle.WaitAll(new WaitHandle[] { p1.BusyWaitHandle, p1.Sender.BusyWaitHandle, p1.Receiver.BusyWaitHandle,p2.BusyWaitHandle,p2. }, 1000);
+        //    Assert.AreEqual(p2.CallCount, 10);
 
-        }
+        //}
 
-        [TestMethod]
-        public void ChainAndCollectList()
-        {
-            int[] value = getTestValue();
-            FunctionProcessor<int,int> p = new FunctionProcessor<int, int>(doAdd);
-            p.WithStartValue(value);
-            var p2 = new FunctionProcessor<int, int>(doAdd);
-            var result=p
-                .Chain(p2)
-                .SetResultCollector();
-            p.Start();
-            p2.Start();
-            Assert.IsTrue( result.CollectUntilClose().SequenceEqual(getTestValue(10, 3)));
-        }
+        //[TestMethod]
+        //public void ChainAndCollectList()
+        //{
+        //    int[] value = getTestValue();
+        //    FunctionProcessor<int,int> p = new FunctionProcessor<int, int>(doAdd);
+        //    p.WithStartValue(value);
+        //    var p2 = new FunctionProcessor<int, int>(doAdd);
+        //    var result=p
+        //        .Chain(p2)
+        //        .SetResultCollector();
+        //    p.Start();
+        //    p2.Start();
+        //    Assert.IsTrue( result.CollectUntilClose().SequenceEqual(getTestValue(10, 3)));
+        //}
 
-        [TestMethod]
-        public void ChainAndCollectSingle()
-        {
-            int[] value = getTestValue();
-            FunctionProcessor<int, int> p = new FunctionProcessor<int, int>(doAdd);
-            p.WithStartValue(value);
-            var p2 = new FunctionProcessor<int, int>(doAdd);
-            var result = p
-                .Chain(p2)
-                .SetResultCollector();
-            p.Start();
-            p2.Start();
-            for (int i = 0; i < 10; i++)
-            {
-                Assert.AreEqual(result.CollectOne(), 3);
-            }
+        //[TestMethod]
+        //public void ChainAndCollectSingle()
+        //{
+        //    int[] value = getTestValue();
+        //    FunctionProcessor<int, int> p = new FunctionProcessor<int, int>(doAdd);
+        //    p.WithStartValue(value);
+        //    var p2 = new FunctionProcessor<int, int>(doAdd);
+        //    var result = p
+        //        .Chain(p2)
+        //        .SetResultCollector();
+        //    p.Start();
+        //    p2.Start();
+        //    for (int i = 0; i < 10; i++)
+        //    {
+        //        Assert.AreEqual(result.CollectOne(), 3);
+        //    }
             
+        //}
+
+        [TestMethod]
+        public void ChainHostingSimpleTest()
+        {
+            var p = new AddFunctionProcessor();
+            var tmp=p.CreateChain(new AddFunctionProcessor()).Start();
+            foreach (var item in getTestValue())
+            {
+                tmp.trigger.Add(item);
+            }
+            tmp.trigger.Complete();
+            Assert.IsTrue(tmp.resultCollector.CollectUntilClose().SequenceEqual(getTestValue(10, 3)));
+                
         }
 
         private  int doAdd(int value)

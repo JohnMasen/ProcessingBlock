@@ -23,12 +23,20 @@ namespace ProcessingBlock.Runtime
             
         }
 
-        public Task<T> CollectOneAsync()
+        public Task<T> CollectOneAsync(CancellationToken token)
         {
             TaskCompletionSource<T> tcs = new TaskCompletionSource<T>();
             Task.Factory.StartNew(() =>
             {
-                tcs.SetResult(col.Take());
+                try
+                {
+                    var result = col.Take(token);
+                    tcs.SetResult(col.Take(token));
+                }
+                catch (Exception ex)
+                {
+                    tcs.SetException(ex);
+                }
             });
             return tcs.Task;
         }

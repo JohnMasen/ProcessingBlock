@@ -16,10 +16,9 @@ namespace ProcessingBlock.Runtime
             return collector;
         }
 
-        public static IProcessor<T, TResult> Chain<T,TResult>(this IEndPointSenderHost<T> source, IProcessor<T,TResult> target)
+        public static ChainHosting<TPara, TResult, TNextResult> CreateChain<TPara, TResult,TNextResult>(this IProcessor<TPara, TResult> processor,IProcessor<TResult,TNextResult> nextProcessor)
         {
-            ProcessorManager.Default.Chain(source, target);
-            return target;
+            return new ChainHosting<TPara, TPara, TResult>(null, processor, processor).Chain(nextProcessor);
         }
 
         public static void WithStartValue<T>(this IEndPointReceiverHost<T>  receiverHost, IEnumerable<T> sourceList)

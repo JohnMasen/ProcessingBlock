@@ -33,7 +33,7 @@ namespace ProcessingBlock.Runtime
             {
                 bindDefault(sender, receiver);
             }
-            
+
         }
 
         private void bindDefault<T>(IEndPointSenderHost<T> sender, IEndPointReceiverHost<T>receiver)
@@ -42,6 +42,8 @@ namespace ProcessingBlock.Runtime
             sender.Sender = tmp;
             receiver.Receiver = tmp;
         }
+
+        
 
         //TODO: Chain should create new chain template instead of instance
     }
