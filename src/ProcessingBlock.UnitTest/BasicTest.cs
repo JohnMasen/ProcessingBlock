@@ -38,7 +38,7 @@ namespace ProcessingBlock.UnitTest
             receiver.Complete();
             processor.WaitUnitlShutdown();//not necessary, just check the threads won't deadlock
             //WaitHandle.WaitAll(new WaitHandle[] { processor.BusyWaitHandle, sender.BusyWaitHandle, receiver.BusyWaitHandle },1000);
-            Assert.IsTrue(collector.Collect().SequenceEqual(targetvalues));
+            Assert.IsTrue(collector.CollectUntilClose().SequenceEqual(targetvalues));
         }
         [TestMethod]
         public void SingleChainCall()
@@ -68,7 +68,7 @@ namespace ProcessingBlock.UnitTest
         }
 
         [TestMethod]
-        public void ChainAndCollector()
+        public void ChainAndCollectList()
         {
             int[] value = getTestValue();
             FunctionProcessor<int,int> p = new FunctionProcessor<int, int>(doAdd);
@@ -79,7 +79,26 @@ namespace ProcessingBlock.UnitTest
                 .SetResultCollector();
             p.Start();
             p2.Start();
-            Assert.IsTrue( result.Collect().SequenceEqual(getTestValue(10, 3)));
+            Assert.IsTrue( result.CollectUntilClose().SequenceEqual(getTestValue(10, 3)));
+        }
+
+        [TestMethod]
+        public void ChainAndCollectSingle()
+        {
+            int[] value = getTestValue();
+            FunctionProcessor<int, int> p = new FunctionProcessor<int, int>(doAdd);
+            p.WithStartValue(value);
+            var p2 = new FunctionProcessor<int, int>(doAdd);
+            var result = p
+                .Chain(p2)
+                .SetResultCollector();
+            p.Start();
+            p2.Start();
+            for (int i = 0; i < 10; i++)
+            {
+                Assert.AreEqual(result.CollectOne(), 3);
+            }
+            
         }
 
         private  int doAdd(int value)

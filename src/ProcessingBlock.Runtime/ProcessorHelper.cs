@@ -8,7 +8,8 @@ namespace ProcessingBlock.Runtime
 {
     public static class ProcessorHelper
     {
-        public static ResultCollector<T> SetResultCollector<T>(this IEndPointSenderHost<T>  senderHost)
+
+        public static ResultCollector<T> SetResultCollector<T>(this IEndPointSenderHost<T> senderHost)
         {
             ResultCollector<T> collector = new ResultCollector<T>();
             senderHost.Sender = collector;
@@ -29,6 +30,7 @@ namespace ProcessingBlock.Runtime
             {
                 r.Add(item);
             }
+            r.Complete();
         }
     }
 }

@@ -1,5 +1,6 @@
 ﻿using ProcessingBlock.Core;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading;
@@ -9,16 +10,38 @@ namespace ProcessingBlock.Runtime
 {
     public class ResultCollector<T> : EndPointSenderBase<T>
     {
-        private List<T> result = new List<T>();
+        private BlockingCollection<T> col = new BlockingCollection<T>();
         protected override Task onSendAsync(T value, CancellationToken token)
         {
-            result.Add(value);
+            col.Add(value);
             return Task.CompletedTask;
         }
-        public List<T> Collect()
+        public override Task Close()
         {
-            BusyWaitHandle.WaitOne();
-            return result;
+            col.CompleteAdding();
+            return base.Close();
+            
         }
+
+        public Task<T> CollectOneAsync()
+        {
+            TaskCompletionSource<T> tcs = new TaskCompletionSource<T>();
+            Task.Factory.StartNew(() =>
+            {
+                tcs.SetResult(col.Take());
+            });
+            return tcs.Task;
+        }
+
+        public T CollectOne()
+        {
+            return col.Take();
+        }
+
+        public IEnumerable<T> CollectUntilClose()
+        {
+            return col.GetConsumingEnumerable();
+        }
+
     }
 }
