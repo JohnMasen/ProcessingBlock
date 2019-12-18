@@ -67,10 +67,34 @@ namespace ProcessingBlock.UnitTest
 
         }
 
-        private  int doAdd(int value)
+        [TestMethod]
+        public void ChainAndCollector()
         {
-            return value + value;
+            int[] value = getTestValue();
+            FunctionProcessor<int,int> p = new FunctionProcessor<int, int>(doAdd);
+            p.WithStartValue(value);
+            var p2 = new FunctionProcessor<int, int>(doAdd);
+            var result=p
+                .Chain(p2)
+                .SetResultCollector();
+            p.Start();
+            p2.Start();
+            Assert.IsTrue( result.Collect().SequenceEqual(getTestValue(10, 3)));
         }
 
+        private  int doAdd(int value)
+        {
+            return value + 1;
+        }
+
+        private int[] getTestValue(int count=10,int fillWith=1)
+        {
+            int[] result = new int[count];
+            for (int i = 0; i < count; i++)
+            {
+                result[i] = fillWith;
+            }
+            return result;
+        }
     }
 }

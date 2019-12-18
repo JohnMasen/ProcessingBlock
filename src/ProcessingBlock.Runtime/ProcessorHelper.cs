@@ -14,5 +14,21 @@ namespace ProcessingBlock.Runtime
             senderHost.Sender = collector;
             return collector;
         }
+
+        public static IProcessor<T, TResult> Chain<T,TResult>(this IEndPointSenderHost<T> source, IProcessor<T,TResult> target)
+        {
+            ProcessorManager.Default.Chain(source, target);
+            return target;
+        }
+
+        public static void WithStartValue<T>(this IEndPointReceiverHost<T>  receiverHost, IEnumerable<T> sourceList)
+        {
+            ManualReceiver<T> r= new ManualReceiver<T>();
+            receiverHost.Receiver = r;
+            foreach (var item in sourceList)
+            {
+                r.Add(item);
+            }
+        }
     }
 }
