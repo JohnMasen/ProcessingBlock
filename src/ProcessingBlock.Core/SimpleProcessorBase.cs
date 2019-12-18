@@ -9,10 +9,7 @@ namespace ProcessingBlock.Core
     public abstract class SimpleProcessorBase<TPara, TResult> : ProcessorBase<TPara, TResult>
     {
         
-        public SimpleProcessorBase()
-        {
-
-        }
+        
         protected override async Task Process(TPara para, IEndPointSender<TResult> resultHandler, CancellationToken token)
         {
             await resultHandler.SendAsync(await ProcessSingle(para),token);

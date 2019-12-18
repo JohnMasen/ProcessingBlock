@@ -14,8 +14,10 @@ namespace ProcessingBlock.UnitTest
         public void SingleCall()
         {
             FunctionProcessor<int,int> processor = new FunctionProcessor<int,int>(doAdd);
-            TestSender<int> sender = new TestSender<int>();
-            processor.Sender = sender;
+            //ResultCollector<int> sender = new ResultCollector<int>();
+            //TestSender<int> sender = new TestSender<int>();
+            //processor.Sender = sender;
+            var collector = processor.SetResultCollector();
             TestReceiver<int> receiver = new TestReceiver<int>();
             processor.Receiver = receiver;
             
@@ -34,9 +36,9 @@ namespace ProcessingBlock.UnitTest
             
             processor.Start();
             receiver.Complete();
-            processor.WaitUnitlShutdown();
+            processor.WaitUnitlShutdown();//not necessary, just check the threads won't deadlock
             //WaitHandle.WaitAll(new WaitHandle[] { processor.BusyWaitHandle, sender.BusyWaitHandle, receiver.BusyWaitHandle },1000);
-            Assert.IsTrue(sender.Results.SequenceEqual(targetvalues));
+            Assert.IsTrue(collector.Collect().SequenceEqual(targetvalues));
         }
         [TestMethod]
         public void SingleChainCall()

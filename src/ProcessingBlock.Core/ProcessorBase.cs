@@ -86,6 +86,15 @@ namespace ProcessingBlock.Core
             {
                 throw new InvalidOperationException("Failed to init Sender",ex);
             }
+            try
+            {
+                Init();
+            }
+            catch (Exception ex)
+            {
+
+                throw new InvalidOperationException("Processor init failed", ex);
+            }
             Status = StatusEnum.Busy;
             (BusyWaitHandle as ManualResetEvent).Reset();
             Task.Factory.StartNew(async () =>
@@ -106,14 +115,18 @@ namespace ProcessingBlock.Core
                 }
                 finally
                 {
-                    await Sender.Close();
                     Status = StatusEnum.Idle;
                     (BusyWaitHandle as ManualResetEvent).Set();
+                    await Sender.Close();
                 }
 
 
             }, cts.Token);
 
+        }
+
+        protected virtual void Init()
+        {
         }
 
         protected abstract Task Process(TPara para, IEndPointSender<TResult> resultHandler, CancellationToken token);
